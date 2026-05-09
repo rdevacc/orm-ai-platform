@@ -5,7 +5,8 @@ services:
   # =========================
 
   landing-page:
-    image: node:20-alpine
+    build:
+      context: ./apps/landing-page
 
     container_name: ai-landing-page
 
@@ -17,8 +18,6 @@ services:
     ports:
       - "8000:5173"
 
-    command: npm run dev -- --host
-
     restart: always
 
     networks:
@@ -29,8 +28,9 @@ services:
   # ORM FRONTEND
   # =========================
 
-  frontend:
-    image: node:20-alpine
+  orm-frontend:
+    build:
+      context: ./apps/orm-system/frontend
 
     container_name: orm-frontend
 
@@ -42,9 +42,10 @@ services:
     ports:
       - "8001:5173"
 
-    command: npm run dev -- --host
-
     restart: always
+
+    depends_on:
+      - orm-backend
 
     networks:
       - orm-network
@@ -54,8 +55,9 @@ services:
   # ORM BACKEND
   # =========================
 
-  backend:
-    image: ultralytics/ultralytics:latest-cpu
+  orm-backend:
+    build:
+      context: ./apps/orm-system/backend
 
     container_name: orm-backend
 
@@ -67,19 +69,7 @@ services:
     ports:
       - "8080:8000"
 
-    command: >
-      sh -c "
-      pip install --no-cache-dir
-      fastapi
-      uvicorn
-      python-multipart
-      opencv-python-headless &&
-      python3 -m uvicorn
-      main:app
-      --host 0.0.0.0
-      --port 8000
-      "
-
+    
     restart: always
 
     networks:
@@ -91,7 +81,8 @@ services:
   # =========================
 
   face-frontend:
-    image: node:20-alpine
+    build:
+      context: ./apps/face-recognition/frontend
 
     container_name: face-frontend
 
@@ -103,13 +94,10 @@ services:
     ports:
       - "8002:5173"
 
-    command: >
-      sh -c "
-      npm install &&
-      npm run dev -- --host
-      "
-
     restart: always
+
+    depends_on:
+      - face-backend
 
     networks:
       - orm-network
