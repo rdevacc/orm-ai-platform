@@ -1,0 +1,145 @@
+services:
+
+  # =========================
+  # LANDING PAGE
+  # =========================
+
+  landing-page:
+    image: node:20-alpine
+
+    container_name: ai-landing-page
+
+    working_dir: /app
+
+    volumes:
+      - ./apps/landing-page:/app
+
+    ports:
+      - "8000:5173"
+
+    command: npm run dev -- --host
+
+    restart: always
+
+    networks:
+      - orm-network
+
+
+  # =========================
+  # ORM FRONTEND
+  # =========================
+
+  frontend:
+    image: node:20-alpine
+
+    container_name: orm-frontend
+
+    working_dir: /app
+
+    volumes:
+      - ./apps/orm-system/frontend:/app
+
+    ports:
+      - "8001:5173"
+
+    command: npm run dev -- --host
+
+    restart: always
+
+    networks:
+      - orm-network
+
+
+  # =========================
+  # ORM BACKEND
+  # =========================
+
+  backend:
+    image: ultralytics/ultralytics:latest-cpu
+
+    container_name: orm-backend
+
+    working_dir: /app
+
+    volumes:
+      - ./apps/orm-system/backend:/app
+
+    ports:
+      - "8080:8000"
+
+    command: >
+      sh -c "
+      pip install --no-cache-dir
+      fastapi
+      uvicorn
+      python-multipart
+      opencv-python-headless &&
+      python3 -m uvicorn
+      main:app
+      --host 0.0.0.0
+      --port 8000
+      "
+
+    restart: always
+
+    networks:
+      - orm-network
+
+
+  # =========================
+  # FACE FRONTEND
+  # =========================
+
+  face-frontend:
+    image: node:20-alpine
+
+    container_name: face-frontend
+
+    working_dir: /app
+
+    volumes:
+      - ./apps/face-recognition/frontend:/app
+
+    ports:
+      - "8002:5173"
+
+    command: >
+      sh -c "
+      npm install &&
+      npm run dev -- --host
+      "
+
+    restart: always
+
+    networks:
+      - orm-network
+
+
+  # =========================
+  # FACE BACKEND
+  # =========================
+
+  face-backend:
+    build:
+      context: ./apps/face-recognition/backend
+
+    container_name: face-backend
+
+    working_dir: /app
+
+    volumes:
+      - ./apps/face-recognition/backend:/app
+
+    ports:
+      - "8090:8000"
+
+    restart: always
+
+    networks:
+      - orm-network
+
+
+networks:
+
+  orm-network:
+    driver: bridge
